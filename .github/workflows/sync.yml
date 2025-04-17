@@ -2,7 +2,7 @@ name: Full Sync and Publish
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # 每6小时同步一次
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -33,8 +33,9 @@ jobs:
 
       - name: Push to Public Repo
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://${{ secrets.ACCESS_TOKEN }}@github.com/hybriddbllc/no1-rules.git
           git add .
           git commit -m "update: refresh rules" || echo "No changes"
-          git push https://${{ secrets.ACCESS_TOKEN }}@github.com/hybriddbllc/no1-rules.git HEAD:main --force
+          git push origin HEAD:main --force
