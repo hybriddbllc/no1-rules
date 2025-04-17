@@ -1,44 +1,88 @@
-name: Update China IP list
+name: Auto Update China IPs
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # 每天UTC时间0点执行（北京时间早上8点）
+    - cron: '0 0 * * *' # 每天UTC时间0点（北京时间早上8点）
+  workflow_dispatch:
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Update GeoIP CN Private
+      - name: Prepare environment
         run: |
-          set -e  # 遇到任何错误立刻终止整个job
-          
-          mkdir -p Surge/Provider  # 确保目录存在
+          sudo apt-get update
+          sudo apt-get install -y wget gawk
 
-          # 先保存之前的文件备份
-          if [ -f Surge/Provider/geoip-cn-private.txt ]; then
-            cp Surge/Provider/geoip-cn-private.txt Surge/Provider/geoip-cn-private.txt.bak
+      - name: Download and Generate CN IPs
+        run: |
+          set -e  # 有任何错误直接终止整个job
+          
+          # 创建必要目录
+          mkdir -p Surge/Surge\ 3/Provider
+          mkdir -p Clash/Provider
+
+          # 保存旧文件备份
+          if [ -f Surge/Surge\ 3/Provider/Domestic\ IPs.list ]; then
+            cp "Surge/Surge 3/Provider/Domestic IPs.list" old_surge_list.txt
+          fi
+          if [ -f Clash/Provider/Domestic\ IPs.yaml ]; then
+            cp "Clash/Provider/Domestic IPs.yaml" old_clash_yaml.txt
           fi
 
-          # 下载最新的文件
-          curl -fL -o Surge/Provider/geoip-cn-private.txt https://raw.githubusercontent.com/metowolf/iplist/master/data/geoip/china.txt
+          # 下载APNIC最新IP数据
+          wget -q --show-progress --timeout=30 --tries=3 -O delegated-apnic-latest http://ftp.apnic.net/stats/apnic/delegated-apnic-latest
 
-          # 比较新旧文件是否有变化
-          if cmp -s Surge/Provider/geoip-cn-private.txt Surge/Provider/geoip-cn-private.txt.bak; then
-            echo "No changes detected. Exiting without committing."
+          # 判断是否下载成功
+          if [ ! -s delegated-apnic-latest ]; then
+            echo "Download failed or empty file. Exiting."
+            exit 1
+          fi
+
+          # 生成新的 IP 列表
+          cat delegated-apnic-latest | awk -F '|' '/CN/&&/ipv4/ {printf("%s/%d\n", $4, 32-log($5)/log(2))}' > raw_ips.txt
+
+          # 生成 Surge 3 Provider
+          {
+            echo "# > Domestic IPs"
+            cat raw_ips.txt | awk '{print "IP-CIDR,"$1",no-resolve"}'
+          } > "Surge/Surge 3/Provider/Domestic IPs.list"
+
+          # 生成 Clash Provider
+          {
+            echo "payload:"
+            cat raw_ips.txt | awk '{print "  - "$1}'
+          } > "Clash/Provider/Domestic IPs.yaml"
+
+          # 对比新旧 Surge文件
+          if [ -f old_surge_list.txt ] && cmp -s "Surge/Surge 3/Provider/Domestic IPs.list" old_surge_list.txt; then
+            echo "No changes detected for Surge list."
+            SURGE_CHANGED=false
+          else
+            SURGE_CHANGED=true
+          fi
+
+          # 对比新旧 Clash文件
+          if [ -f old_clash_yaml.txt ] && cmp -s "Clash/Provider/Domestic IPs.yaml" old_clash_yaml.txt; then
+            echo "No changes detected for Clash YAML."
+            CLASH_CHANGED=false
+          else
+            CLASH_CHANGED=true
+          fi
+
+          # 如果都没变化，直接退出
+          if [ "$SURGE_CHANGED" = false ] && [ "$CLASH_CHANGED" = false ]; then
+            echo "No file changes detected. Skipping commit."
             exit 0
           fi
 
-          # 如果有变化就commit
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Surge/Provider/geoip-cn-private.txt
-          git commit -m "chore: update geoip-cn-private.txt $(date +'%Y-%m-%d')"
+          # 否则，commit并推送
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "Surge/Surge 3/Provider/Domestic IPs.list" "Clash/Provider/Domestic IPs.yaml"
+          git commit -m "chore: Update China IPs ($(date +'%Y-%m-%d'))"
           git push
