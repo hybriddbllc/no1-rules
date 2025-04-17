@@ -2,7 +2,7 @@ name: Full Sync and Publish
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时自动同步
+    - cron: '0 */6 * * *'  # 每6小时同步一次
   workflow_dispatch:
 
 jobs:
@@ -36,11 +36,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Push to no1-rules
+      - name: Re-Init git and Force Push
         run: |
+          rm -rf .git
+          git init
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin git@github.com:hybriddbllc/no1-rules.git
           git add .
-          git commit -m "Automated update from no1-source" || echo "No changes to commit"
-          git push origin HEAD:main --force
+          git commit -m "First automated commit to no1-rules"
+          git branch -M main
+          git remote add origin git@github.com:hybriddbllc/no1-rules.git
+          git push origin main --force
