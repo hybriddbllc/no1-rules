@@ -1,0 +1,25 @@
+name: Update China IP list
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # 每天UTC时间0点触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Update GeoIP CN Private
+        run: |
+          curl -L -o Surge/Provider/geoip-cn-private.txt https://raw.githubusercontent.com/metowolf/iplist/master/data/geoip/china.txt
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Surge/Provider/geoip-cn-private.txt
+          git commit -m "chore: update geoip-cn-private.txt" || echo "No changes to commit"
+          git push
