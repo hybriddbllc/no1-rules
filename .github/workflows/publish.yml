@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,6 +16,8 @@ jobs:
     steps:
       - name: Checkout no1-source
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ✅ 拉取完整git历史，避免index-pack failed
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.4
@@ -21,7 +26,7 @@ jobs:
 
       - name: Push to no1-rules
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin git@github.com:hybriddbllc/no1-rules.git
           git push --force origin main
