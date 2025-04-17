@@ -31,10 +31,10 @@ jobs:
           mv temp/Rules-main/.github/workflows/* .github/workflows/
           rm -rf temp
 
-      - name: Push to no1-rules repo
-        uses: ad-m/github-push-action@master
+      - name: Push to no1-rules
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
-          repository: hybriddbllc/no1-rules
-          branch: main
-          force: true
+          publish_dir: .
+          publish_branch: main
+          force_orphan: false
