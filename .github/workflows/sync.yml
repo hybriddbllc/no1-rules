@@ -2,7 +2,7 @@ name: Full Sync and Publish
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # 每6小时同步一次
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -40,9 +40,7 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          git init
-          git remote add origin https://hybriddbllc:${ACCESS_TOKEN}@github.com/hybriddbllc/no1-rules.git
+          git remote set-url origin https://hybriddbllc:${ACCESS_TOKEN}@github.com/hybriddbllc/no1-rules.git
           git add .
-          git commit -m "Automated update from no1-source"
-          git branch -M main
-          git push origin main --force
+          git commit -m "Automated update from no1-source" || echo "No changes to commit"
+          git push origin HEAD:main --force
