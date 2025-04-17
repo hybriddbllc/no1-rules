@@ -31,12 +31,10 @@ jobs:
           mv temp/Rules-main/.github/workflows/* .github/workflows/
           rm -rf temp
 
-      - name: Push to Public Repo
-        run: |
-          git config --global user.name "hybriddbllc-bot"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote remove origin || true
-          git remote add origin https://${{ secrets.ACCESS_TOKEN }}@github.com/hybriddbllc/no1-rules.git
-          git add .
-          git commit -m "update: refresh rules" || echo "No changes"
-          git push origin HEAD:main --force
+      - name: Push to no1-rules repo
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.ACCESS_TOKEN }}
+          repository: hybriddbllc/no1-rules
+          branch: main
+          force: true
