@@ -24,7 +24,9 @@ DOMAIN-SUFFIX,claudeusercontent.com
 DOMAIN,gateway.ai.cloudflare.com
 
 # > Codeium
+DOMAIN-SUFFIX,windsurf.com
 DOMAIN-SUFFIX,codeium.com
+DOMAIN-SUFFIX,codeiumdata.com
 
 # > Copilot
 DOMAIN-SUFFIX,githubcopilot.com
