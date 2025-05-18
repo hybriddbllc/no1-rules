@@ -58,7 +58,7 @@ jobs:
           # 生成 Clash Provider
           {
             echo "payload:"
-            cat raw_ips.txt | awk '{print "  - IP-CIDR,"$1}'
+            cat raw_ips.txt | awk '{print "  - "$1}' > Clash/Provider/Domestic\ IPs.yaml
           } > "Clash/Provider/Domestic IPs.yaml"
 
           # 对比新旧 Surge文件
