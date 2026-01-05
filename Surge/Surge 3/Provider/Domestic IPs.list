@@ -6613,6 +6613,7 @@ IP-CIDR,192.140.208.0/22,no-resolve
 IP-CIDR,192.140.212.0/22,no-resolve
 IP-CIDR,192.144.128.0/17,no-resolve
 IP-CIDR,192.197.113.0/24,no-resolve
+IP-CIDR,192.232.34.0/23,no-resolve
 IP-CIDR,193.112.0.0/16,no-resolve
 IP-CIDR,193.119.0.0/19,no-resolve
 IP-CIDR,198.175.100.0/22,no-resolve
